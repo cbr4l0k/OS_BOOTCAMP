@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Use LLM to help with fact-checking
 """
 
-from ...domain.ports import VerificationPort
-from ...domain.models import RetrievedData, VerifiedData
+from src.domain.ports import VerificationPort
+from src.domain.models import RetrievedData, VerifiedData
 
 
 class Verifier(VerificationPort):

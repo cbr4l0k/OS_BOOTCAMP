@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Handle follow-up questions
 """
 
-from ...domain.ports import ConversationPort
-from ...domain.models import AgentState
+from src.domain.ports import ConversationPort
+from src.domain.models import AgentState
 
 
 class ChatAgent(ConversationPort):

@@ -12,9 +12,9 @@ TO IMPLEMENT:
 4. Update agent state with retrieved data
 """
 
-from ...domain.models import AgentState, Query
-from ...adapters.retrieval.orchestrator import RetrievalOrchestrator
-from ...domain.models import SourceProvider
+from src.domain.models import AgentState, Query
+from src.adapters.retrieval.orchestrator import RetrievalOrchestrator
+from src.domain.models import SourceProvider
 
 
 def retrieval_node(state: AgentState) -> AgentState:
@@ -56,8 +56,8 @@ def retrieval_node(state: AgentState) -> AgentState:
     #
     # # Initialize all retrieval adapters
     # # In production, you'd inject these as dependencies
-    # from ...adapters.retrieval.serp_adapter import SerpAdapter
-    # from ...adapters.retrieval.reddit_adapter import RedditAdapter
+    # from src.adapters.retrieval.serp_adapter import SerpAdapter
+    # from src.adapters.retrieval.reddit_adapter import RedditAdapter
     # # ... import other adapters ...
     #
     # # For now, we'll use an empty list (placeholder)

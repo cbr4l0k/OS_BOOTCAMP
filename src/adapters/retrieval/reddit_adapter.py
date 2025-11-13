@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Parse posts and top comments into Source objects
 """
 
-from ...domain.ports import RetrievalPort
-from ...domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
+from src.domain.ports import RetrievalPort
+from src.domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
 
 
 class RedditAdapter(RetrievalPort):

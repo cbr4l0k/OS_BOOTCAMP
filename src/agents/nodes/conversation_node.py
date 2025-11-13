@@ -12,8 +12,8 @@ TO IMPLEMENT:
 4. Decide when to move to decomposition
 """
 
-from ...domain.models import AgentState
-from ...adapters.conversation.chat_agent import ChatAgent
+from src.domain.models import AgentState
+from src.adapters.conversation.chat_agent import ChatAgent
 
 
 def conversation_node(state: AgentState) -> AgentState:

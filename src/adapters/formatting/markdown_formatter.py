@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Make it scannable and easy to read
 """
 
-from ...domain.ports import FormattingPort
-from ...domain.models import StructuredAnswer
+from src.domain.ports import FormattingPort
+from src.domain.models import StructuredAnswer
 
 
 class MarkdownFormatter(FormattingPort):

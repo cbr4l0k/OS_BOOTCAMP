@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Handle platform-specific data formats
 """
 
-from ...domain.ports import RetrievalPort
-from ...domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
+from src.domain.ports import RetrievalPort
+from src.domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
 
 
 class SocialAdapter(RetrievalPort):

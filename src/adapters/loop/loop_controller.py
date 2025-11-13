@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Prevent infinite loops
 """
 
-from ...domain.ports import LoopControlPort
-from ...domain.models import AgentState
+from src.domain.ports import LoopControlPort
+from src.domain.models import AgentState
 
 
 class LoopController(LoopControlPort):

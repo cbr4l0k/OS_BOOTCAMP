@@ -11,8 +11,8 @@ TO IMPLEMENT:
 3. Return routing decision for LangGraph
 """
 
-from ...domain.models import AgentState
-from ...adapters.loop.loop_controller import LoopController
+from src.domain.models import AgentState
+from src.adapters.loop.loop_controller import LoopController
 
 
 def loop_control_node(state: AgentState) -> AgentState:

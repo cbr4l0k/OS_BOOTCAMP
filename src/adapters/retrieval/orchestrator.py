@@ -1,5 +1,5 @@
-from ...domain.ports import RetrievalPort, RetrievedData
-from ...domain.models import Query, SourceProvider
+from src.domain.ports import RetrievalPort, RetrievedData
+from src.domain.models import Query, SourceProvider
 
 
 class RetrievalOrchestrator(RetrievalPort):

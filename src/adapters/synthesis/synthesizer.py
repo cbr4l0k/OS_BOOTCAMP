@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Generate a clear, well-structured conclusion
 """
 
-from ...domain.ports import SynthesisPort
-from ...domain.models import VerifiedData, StructuredAnswer
+from src.domain.ports import SynthesisPort
+from src.domain.models import VerifiedData, StructuredAnswer
 
 
 class Synthesizer(SynthesisPort):

@@ -12,8 +12,8 @@ TO IMPLEMENT:
 4. Update state with structured answer
 """
 
-from ...domain.models import AgentState
-from ...adapters.synthesis.synthesizer import Synthesizer
+from src.domain.models import AgentState
+from src.adapters.synthesis.synthesizer import Synthesizer
 
 
 def synthesis_node(state: AgentState) -> AgentState:

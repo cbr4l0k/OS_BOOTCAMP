@@ -12,8 +12,8 @@ TO IMPLEMENT:
 4. Update agent state with task list
 """
 
-from ...domain.models import AgentState
-from ...adapters.tasks.decomposer import Decomposer
+from src.domain.models import AgentState
+from src.adapters.tasks.decomposer import Decomposer
 
 
 def decomposition_node(state: AgentState) -> AgentState:

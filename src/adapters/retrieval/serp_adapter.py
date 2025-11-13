@@ -12,8 +12,8 @@ TO IMPLEMENT:
 5. Handle errors and rate limits
 """
 
-from ...domain.ports import RetrievalPort
-from ...domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
+from src.domain.ports import RetrievalPort
+from src.domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
 
 
 class SerpAdapter(RetrievalPort):

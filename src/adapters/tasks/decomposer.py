@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Return a list of Query objects
 """
 
-from ...domain.ports import TaskDecompositionPort
-from ...domain.models import Query
+from src.domain.ports import TaskDecompositionPort
+from src.domain.models import Query
 
 
 class Decomposer(TaskDecompositionPort):

@@ -11,8 +11,8 @@ TO IMPLEMENT:
 4. Update state with verified data and confidence
 """
 
-from ...domain.models import AgentState
-from ...adapters.verification.verifier import Verifier
+from src.domain.models import AgentState
+from src.adapters.verification.verifier import Verifier
 
 
 def verification_node(state: AgentState) -> AgentState:
