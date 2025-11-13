@@ -14,14 +14,17 @@ TO IMPLEMENT:
 
 from src.domain.ports import RetrievalPort
 from src.domain.models import Query, RetrievedData, Source, SourceProvider, SourceType
+from src.app.config import config
+from tavily import TavilyClient
+from pprint import pprint
 
 
-class SerpAdapter(RetrievalPort):
+class TavilySerpAdapter(RetrievalPort):
     """
-    Retrieves search results from search engines.
+    Retrieves search results from Tavily search engine.
 
     Example usage:
-        adapter = SerpAdapter(api_key="your_key")
+        adapter = TavilySerpAdapter() # API key is read from config
         query = Query(content="What is hexagonal architecture?")
         results = adapter.retrieve(query)
     """
@@ -33,9 +36,8 @@ class SerpAdapter(RetrievalPort):
         Args:
             api_key: Your search API key (get from environment variables)
         """
-        self.api_key = api_key
-        # TODO: Initialize your search API client here
-        # Example: self.client = GoogleSearchClient(api_key=self.api_key)
+        self.client = TavilyClient(api_key=api_key or config.tavily_api_key)
+
 
     @property
     def provider(self) -> SourceProvider:
@@ -52,42 +54,37 @@ class SerpAdapter(RetrievalPort):
         Returns:
             RetrievedData containing a list of search result sources
         """
-        # TODO: Implement the actual search logic
-        #
-        # Steps:
-        # 1. Call your search API with query.content
-        # 2. Get the results (usually top 10-20 results)
-        # 3. For each result, create a Source object
-        # 4. Return RetrievedData with all sources
-
-        # Placeholder implementation:
-        sources = []
-
-        # Example of what you should do:
-        # try:
-        #     api_results = self.client.search(query.content, num_results=10)
-        #
-        #     for idx, result in enumerate(api_results):
-        #         source = Source(
-        #             id=f"serp_{idx}_{hash(result['url'])}",
-        #             provider=SourceProvider.SERP,
-        #             type=SourceType.WEBPAGE,
-        #             url=result['url'],
-        #             title=result['title'],
-        #             excerpt=result['snippet'],
-        #             metadata={
-        #                 'rank': idx + 1,
-        #                 'timestamp': result.get('date'),
-        #             }
-        #         )
-        #         sources.append(source)
-        #
-        # except Exception as e:
-        #     # Handle errors gracefully
-        #     print(f"Error retrieving SERP results: {e}")
-        #     # You might want to log this or raise a custom exception
+        try:
+            api_results = self.client.search(query.content)["results"]
+            sources = []
+            for idx, result in enumerate(api_results):
+                source = Source(
+                    id=f"tavily_{idx}_{hash(result['url'])}",
+                    provider=SourceProvider.SERP,
+                    type=SourceType.WEBPAGE,
+                    url=result['url'],
+                    title=result['title'],
+                    excerpt=result['content'],
+                    metadata={
+                        'rank': idx + 1,
+                        'score': result.get('score'),
+                    }
+                )
+                sources.append(source)
+        except Exception as e:
+            raise RuntimeError(f"Error retrieving SERP results: {e}")
 
         return RetrievedData(sources=sources)
+
+if __name__ == "__main__":
+    adapter = TavilySerpAdapter()
+    query = Query(content="What is hexagonal architecture?")
+    results = adapter.retrieve(query)
+
+    for source in results.sources:
+        print("Source:")
+        print(f"- [{source.title}]({source.url})")
+        print(source)
 
 
 # HELPFUL RESOURCES:
@@ -95,7 +92,7 @@ class SerpAdapter(RetrievalPort):
 # - Bing Search API: https://www.microsoft.com/en-us/bing/apis/bing-web-search-api
 # - SerpAPI (easier, paid): https://serpapi.com/
 #
-# TIPS:
+# TODO 🫠:
 # - Always handle rate limits and API errors
 # - Cache results when possible to save API calls
 # - Consider using async/await for better performance

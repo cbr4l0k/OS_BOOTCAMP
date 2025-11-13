@@ -10,6 +10,12 @@ class AppConfig(BaseSettings):
     This configuration loads from environment variables or .env file.
     Priority: environment variables > .env file > default values
     """
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
 
     # OpenAI API Configuration
     openai_api_key: str = Field(
@@ -44,12 +50,12 @@ class AppConfig(BaseSettings):
         description="Host for Chainlit server"
     )
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
-    )
+    tavily_api_key: str = Field(
+            ...,
+            description="API key for Tavily service"
+            )
+
+
 
 
 # Create a singleton instance
