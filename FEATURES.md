@@ -6,9 +6,9 @@
 ## 🧠 PHASE 2: Pro Mode Core (Intelligence Layer)
 **Goal**: Add verification and task decomposition for deep research
 
-- [ ] **Verification engine** - Add cross-source fact checking with confidence scores - `feature/verification-engine`
-- [ ] **Verification node** - Add validation graph node between retrieval and synthesis - `feature/verification-node`
-- [ ] **Task decomposer** - Implement complex query breakdown into sub-tasks - `feature/task-decomposer`
+- [x] **Verification engine** - Add cross-source fact checking with confidence scores - `feature/verification-engine`
+- [x] **Verification node** - Add validation graph node between retrieval and synthesis - `feature/verification-node`
+- [x] **Task decomposer** - Implement complex query breakdown into sub-tasks - `feature/task-decomposer`
 - [ ] **Decomposition node** - Add task breakdown graph node for Pro Mode - `feature/decomposition-node`
 
 **✅ Milestone**: System can break down complex queries and verify facts across sources
