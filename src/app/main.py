@@ -16,22 +16,23 @@ from langchain_core.runnables import Runnable
 from typing import cast
 import chainlit as cl
 
+from src.app.config import config
+
+
 
 @cl.on_chat_start
 async def on_chat_start():
     """Initialize the chat session with the LLM and prompt."""
-    api_key = "e52291a2a8dfd704a8e89668f5472803"
-    base_url = "https://foundation-models.api.cloud.ru/v1"
+    api_key = config.openai_api_key
+    base_url = config.openai_api_base
 
+    # The API uses standard Bearer token authentication
+    # No custom headers needed - just pass the API key directly
     model = ChatOpenAI(
-        streaming=True,
-        model_name="MiniMaxAI/MiniMax-M2",
+        streaming=config.streaming,
+        model_name=config.model_name,
         openai_api_base=base_url,
         openai_api_key=api_key,
-        default_headers={
-            "Authorization": f"Api-Key {api_key}",
-            "Content-Type": "application/json"
-        },
     )
 
     prompt = ChatPromptTemplate.from_messages(
