@@ -1,4 +1,5 @@
 from src.adapters.synthesis.synthesizer import Synthesizer
+from src.adapters.formatting.markdown_formatter import MarkdownFormatter
 from src.domain.models import VerifiedData
 from langchain_openai import ChatOpenAI
 from src.app.config import AppConfig
@@ -41,19 +42,27 @@ def main():
         facts={
             "statements": [
                 "No fruits are vegetables.",
-                "Some items labelled as ‘vegetables’ are botanically fruits (e.g., tomato, cucumber).",
+                "Some items labelled as 'vegetables' are botanically fruits (e.g., tomato, cucumber).",
                 "Therefore, some vegetables are not vegetables."
             ],
-            "analysis_hint": "Here the equivocation on ‘vegetable’ (culinary vs botanical) introduces a conflict with the simple universal 'no fruits are vegetables'."
+            "analysis_hint": "Here the equivocation on 'vegetable' (culinary vs botanical) introduces a conflict with the simple universal 'no fruits are vegetables'."
         },
         confidence=0.68
     )
+
     synthesizer = Synthesizer(llm_client=model)
+    formatter = MarkdownFormatter(include_metadata=True)
 
     for idx, vd in enumerate([vd1, vd2, vd3]):
-        print(f"\n--- Synthesizing VerifiedData #{idx+1} ---")
-        res = synthesizer.synthesize(data=vd)
-        print(f"{res=}")
+        print(f"\n{'='*80}")
+        print(f"Test Case #{idx+1}")
+        print(f"{'='*80}\n")
+
+        answer = synthesizer.synthesize(data=vd)
+        markdown_output = formatter.format(answer)
+
+        print(markdown_output)
+        print(f"\n{'='*80}\n")
 
 
 
