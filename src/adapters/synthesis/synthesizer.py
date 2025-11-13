@@ -11,8 +11,11 @@ TO IMPLEMENT:
 4. Generate a clear, well-structured conclusion
 """
 
+from src.domain.models import VerifiedData, StructuredAnswer, SynthesisOutput
 from src.domain.ports import SynthesisPort
-from src.domain.models import VerifiedData, StructuredAnswer
+from src.domain.prompts import SYNTHESIS_PROMPT
+
+
 
 
 class Synthesizer(SynthesisPort):
@@ -25,7 +28,7 @@ class Synthesizer(SynthesisPort):
         answer = synthesizer.synthesize(verified)
     """
 
-    def __init__(self, llm_client=None):
+    def __init__(self, llm_client):
         """
         Initialize the Synthesizer.
 
@@ -33,8 +36,6 @@ class Synthesizer(SynthesisPort):
             llm_client: LLM client for generating answers
         """
         self.llm = llm_client
-        # TODO: Set up LLM with appropriate prompts
-        # Configure temperature, max tokens, etc.
 
     def synthesize(self, data: VerifiedData) -> StructuredAnswer:
         """
@@ -57,74 +58,67 @@ class Synthesizer(SynthesisPort):
         # 6. Add metadata (confidence, sources used, etc.)
 
         # Placeholder implementation:
-        reasoning = "Placeholder reasoning"
-        conclusion = "Placeholder conclusion"
+        reasoning = ""
+        conclusion = ""
         metadata = {}
 
-        # Example implementation:
-        # if not data.facts:
-        #     return StructuredAnswer(
-        #         reasoning="No verified facts available to synthesize.",
-        #         conclusion="Unable to provide an answer due to lack of data.",
-        #         metadata={'confidence': 0.0}
-        #     )
-        #
-        # # Prepare facts for synthesis
-        # facts_summary = "\n".join([
-        #     f"- {key}: {value.get('content', value)}"
-        #     for key, value in data.facts.items()
-        # ])
-        #
-        # # Create synthesis prompt
-        # prompt = f"""
-        # Based on the following verified information, provide a comprehensive answer.
-        #
-        # Verified Facts (Confidence: {data.confidence:.2%}):
-        # {facts_summary}
-        #
-        # Please:
-        # 1. Synthesize these facts into a coherent answer
-        # 2. Explain your reasoning process
-        # 3. Provide a clear conclusion
-        # 4. Note any limitations or uncertainties
-        #
-        # Format your response as:
-        # REASONING: [step-by-step explanation]
-        # CONCLUSION: [final answer]
-        # """
-        #
-        # try:
-        #     # Call LLM to generate synthesis
-        #     # response = self.llm.complete(prompt, temperature=0.3)
-        #     #
-        #     # # Parse response
-        #     # if "REASONING:" in response and "CONCLUSION:" in response:
-        #     #     parts = response.split("CONCLUSION:")
-        #     #     reasoning = parts[0].replace("REASONING:", "").strip()
-        #     #     conclusion = parts[1].strip()
-        #     # else:
-        #     #     reasoning = "Generated synthesis"
-        #     #     conclusion = response
-        #
-        #     # Add metadata
-        #     metadata = {
-        #         'confidence': data.confidence,
-        #         'num_sources': len(data.facts),
-        #         'synthesis_method': 'llm',
-        #     }
-        #
-        # except Exception as e:
-        #     print(f"Error in synthesis: {e}")
-        #     # Fallback: simple concatenation
-        #     reasoning = "Facts were collected from multiple sources but synthesis failed."
-        #     conclusion = facts_summary
-        #     metadata = {'confidence': data.confidence, 'error': str(e)}
+        if not data.facts:
+            return StructuredAnswer(
+                reasoning="No verified facts available to synthesize.",
+                conclusion="Unable to provide an answer due to lack of data.",
+                metadata={'confidence': 0.0}
+            )
 
-        return StructuredAnswer(
-            reasoning=reasoning,
-            conclusion=conclusion,
-            metadata=metadata
-        )
+        # Prepare facts for synthesis
+        facts_summary = data.to_formatted_string()
+        prompt = SYNTHESIS_PROMPT.format(confidence=data.confidence, facts=facts_summary)
+
+        try:
+            # Create structured LLM that outputs SynthesisOutput schema
+            structured_llm = self.llm.with_structured_output(SynthesisOutput)
+
+            # Configure temperature for more factual responses
+            structured_llm_with_config = structured_llm.with_config(configurable={
+                "temperature": 0.3,
+            })
+
+            # Call LLM to generate synthesis
+            response = structured_llm_with_config.invoke(prompt)
+
+            # Generate metadata separately (not from LLM)
+            metadata = {
+                'confidence': data.confidence,
+                'num_sources': len(data.facts),
+                'synthesis_method': 'llm_structured',
+            }
+
+            return StructuredAnswer(
+                reasoning=response.reasoning,
+                conclusion=response.conclusion,
+                metadata=metadata
+            )
+
+        except Exception as e:
+            print(f"Error in synthesis: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback: simple concatenation
+            reasoning = "Facts were collected from multiple sources but synthesis failed."
+            conclusion = facts_summary
+            metadata = {
+                'confidence': data.confidence,
+                'num_sources': len(data.facts),
+                'synthesis_method': 'fallback',
+                'error': str(e)
+            }
+
+            return StructuredAnswer(
+                reasoning=reasoning,
+                conclusion=conclusion,
+                metadata=metadata
+            )
+
+
 
 
 # HELPFUL RESOURCES:

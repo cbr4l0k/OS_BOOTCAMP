@@ -68,6 +68,36 @@ class VerifiedData(BaseModel):
     facts: dict[str, Any] = Field(..., description="Valid factual content.")
     confidence: float = Field(..., gt=0, lt=1, description="Confidence score between 0 and 1.")
 
+    def to_formatted_string(self) -> str:
+        """
+        Convert verified facts into a nicely formatted string for LLM consumption.
+
+        Returns:
+            A formatted string representation of the facts
+        """
+        if not self.facts:
+            return "No verified facts available."
+
+        formatted_facts = []
+        for key, value in self.facts.items():
+            # Handle different value types
+            if isinstance(value, dict):
+                content = value.get('content', str(value))
+            elif isinstance(value, list):
+                content = "\n  ".join(f"- {item}" for item in value)
+            else:
+                content = str(value)
+
+            formatted_facts.append(f"{key}:\n  {content}")
+
+        return "\n\n".join(formatted_facts)
+
+class SynthesisOutput(BaseModel):
+    """
+    Structured output schema for LLM synthesis.
+    """
+    reasoning: str = Field(..., description="Explanation or reasoning chain showing how the conclusion was derived.")
+    conclusion: str = Field(..., description="Final distilled answer based on the verified facts.")
 
 class StructuredAnswer(BaseModel):
     reasoning: str = Field(..., description="Explanation or reasoning chain.")
