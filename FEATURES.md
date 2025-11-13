@@ -1,6 +1,5 @@
 # TeraFinder - Feature Implementation Plan
 
--[ ] Markdown formatter - Implement citation-rich markdown output - `feature/markdown-formatter`
 -[ ] Retrieval node - Implement graph node for data retrieval orchestration - `feature/retrieval-node`
 -[ ] Synthesis node - Implement graph node for answer generation - `feature/synthesis-node`
 -[ ] Graph definition - Wire up basic LangGraph workflow (retrieval→synthesis→format) - `feature/graph-definition`
@@ -30,3 +29,4 @@
 
 -[x] SERP adapter - Implement Google/Bing search API for basic web queries - `feature/serp-adapter`
 -[x] Answer synthesizer - Implement LLM-based answer generation from sources - `feature/answer-synthesizer`
+-[x] Markdown formatter - Implement citation-rich markdown output - `feature/markdown-formatter`
