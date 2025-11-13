@@ -34,17 +34,22 @@ def synthesis_node(state: AgentState, synthesizer: Synthesizer) -> AgentState:
     """
     logger.info("Starting synthesis...")
 
-    # Check if we have verified data
+    # Prefer verified data (Pro Mode), fall back to retrieved data (Simple Mode)
     if state.verified:
-        logger.info(f"Synthesizing from verified data (confidence: {state.verified.confidence:.2f})")
+        # Pro Mode: Use real verified data from verification node
+        logger.info(
+            f"Pro Mode: Synthesizing from verified data "
+            f"(confidence: {state.verified.confidence:.2%}, "
+            f"diversity: {state.verified.diversity_score:.2%})"
+        )
         data_to_synthesize = state.verified
     elif state.retrieved:
-        # Simple Mode: convert retrieved data to verified data
-        # This is a passthrough for MVP - real verification comes in Phase 2
-        logger.info("Simple Mode: converting retrieved data to verified data (passthrough)")
+        # Simple Mode: Convert retrieved data to verified data (passthrough)
+        # This maintains backwards compatibility with Simple Mode graphs
+        logger.info("Simple Mode: Converting retrieved data to verified data (passthrough)")
         data_to_synthesize = VerifiedData(
             facts={"retrieved": state.retrieved.sources},
-            confidence=0.7,  # Default confidence for unverified data
+            confidence=0.7,  # Fixed confidence for Simple Mode
             diversity_score=0.5,
             corroboration={}
         )
