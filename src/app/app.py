@@ -2,79 +2,136 @@
 TeraFinder Chainlit Application
 
 This is the main entry point for the Chainlit UI.
-Uses LangChain v1.x compatible streaming (astream_events) instead of
-deprecated callbacks.
-
-For the callback compatibility issue, see:
-https://github.com/Chainlit/chainlit/issues/2607
+Integrates the Simple Mode LangGraph pipeline for fast search and answer generation.
 """
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import Runnable
-from typing import cast
 import chainlit as cl
+from langchain_openai import ChatOpenAI
 
 from src.app.config import config
-
+from src.agents.graph import create_simple_mode_graph, create_initial_state
+from src.adapters.retrieval.serp_adapter import TavilySerpAdapter
+from src.domain.models import SourceProvider
 
 
 @cl.on_chat_start
 async def on_chat_start():
-    """Initialize the chat session with the LLM and prompt."""
-    api_key = config.openai_api_key
-    base_url = config.openai_api_base
+    """Initialize the chat session with the TeraFinder Simple Mode graph."""
 
-    # The API uses standard Bearer token authentication
-    # No custom headers needed - just pass the API key directly
-    model = ChatOpenAI(
-        streaming=config.streaming,
-        model_name=config.model_name,
-        openai_api_base=base_url,
-        openai_api_key=api_key,
+    # Send welcome message
+    await cl.Message(
+        content=(
+            "# 🔍 Welcome to TeraFinder!\n\n"
+            "I'm your AI-powered research assistant. I can help you find and synthesize "
+            "information from across the web.\n\n"
+            "**Simple Mode** is active - I'll give you fast answers with citations.\n\n"
+            "Ask me anything!"
+        )
+    ).send()
+
+    # Initialize retrieval adapters
+    serp_adapter = TavilySerpAdapter(api_key=config.tavily_api_key)
+
+    # Initialize LLM client
+    llm = ChatOpenAI(
+        api_key=config.openai_api_key,
+        base_url=config.openai_api_base,
+        model=config.model_name,
+        temperature=0.3,
+        streaming=True  # Enable streaming for real-time updates
     )
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "You're a very knowledgeable historian who provides accurate and eloquent answers to historical questions.",
-            ),
-            ("human", "{question}"),
-        ]
+    # Create Simple Mode graph
+    graph = create_simple_mode_graph(
+        retrieval_adapters=[serp_adapter],
+        llm_client=llm,
+        enabled_providers=[SourceProvider.SERP],
+        include_metadata=True
     )
 
-    runnable = prompt | model | StrOutputParser()
-    cl.user_session.set("runnable", runnable)
+    # Store graph in session
+    cl.user_session.set("graph", graph)
 
 
 @cl.on_message
 async def on_message(message: cl.Message):
     """
-    Handle incoming messages using LangChain v1.x compatible streaming.
+    Handle incoming messages using the TeraFinder graph.
 
-    This uses astream_events() instead of the deprecated callback handler.
-    The callback handler (cl.LangchainCallbackHandler) doesn't work with
-    LangChain v1.x due to API changes.
+    Executes the Simple Mode pipeline:
+    1. Retrieval - Search the web for relevant sources
+    2. Synthesis - Generate answer with LLM
+    3. Format - Create markdown output with citations
     """
-    runnable = cast(Runnable, cl.user_session.get("runnable"))
+    graph = cl.user_session.get("graph")
 
+    # Create initial state from user query
+    initial_state = create_initial_state(message.content)
+
+    # Create message for streaming updates
     msg = cl.Message(content="")
     await msg.send()
 
-    # Use astream_events for LangChain v1.x compatibility
-    # This replaces the deprecated callbacks approach
-    async for event in runnable.astream_events(
-        {"question": message.content},
-        version="v2"  # Use v2 events API
-    ):
-        # Stream tokens from the chat model
-        if event["event"] == "on_chat_model_stream":
-            chunk = event.get("data", {}).get("chunk")
-            if chunk and hasattr(chunk, "content"):
-                content = chunk.content
-                if content:
-                    await msg.stream_token(content)
+    # Track which step we're on
+    current_step = None
 
-    await msg.update()
+    try:
+        # Show initial status
+        await msg.stream_token("🔎 **Searching the web...**\n\n")
+
+        # Execute graph and stream progress
+        final_state = None
+        async for chunk in graph.astream(initial_state, stream_mode="updates"):
+            # chunk is a dict mapping node name -> state update
+            for node_name, state_update in chunk.items():
+                if node_name == "retrieval":
+                    # Retrieval complete
+                    num_sources = len(state_update.get("retrieved", {}).sources) if state_update.get("retrieved") else 0
+                    await msg.stream_token(f"✅ Retrieved {num_sources} sources\n\n")
+                    await msg.stream_token("🧠 **Analyzing sources and generating answer...**\n\n")
+                elif node_name == "synthesis":
+                    # Synthesis complete
+                    await msg.stream_token("✅ Answer generated\n\n")
+                    await msg.stream_token("📝 **Formatting response...**\n\n")
+                elif node_name == "format":
+                    # Save final state
+                    final_state = state_update
+
+        # Extract formatted output
+        if final_state and "memory" in final_state:
+            formatted_output = final_state["memory"].get("formatted_output")
+
+            if formatted_output:
+                # Clear intermediate content and show final formatted answer
+                msg.content = formatted_output
+                await msg.update()
+            else:
+                # Fallback if formatting failed
+                msg.content = (
+                    "❌ **Error**: Failed to generate formatted output.\n\n"
+                    f"Answer: {final_state.get('answer', 'No answer generated')}"
+                )
+                await msg.update()
+        else:
+            msg.content = "❌ **Error**: Graph execution failed to produce output."
+            await msg.update()
+
+    except Exception as e:
+        # Handle errors gracefully
+        error_msg = (
+            f"❌ **An error occurred**: {str(e)}\n\n"
+            "Please try again or rephrase your question."
+        )
+        msg.content = error_msg
+        await msg.update()
+
+        # Log error for debugging
+        import logging
+        logging.error(f"Error processing message: {e}", exc_info=True)
+
+
+# Optional: Add settings or commands
+@cl.on_settings_update
+async def on_settings_update(settings):
+    """Handle settings updates (future: mode switching, provider selection)."""
+    pass
