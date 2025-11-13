@@ -27,10 +27,9 @@ async def on_chat_start():
         streaming=True,
         model_name="MiniMaxAI/MiniMax-M2",
         openai_api_base=base_url,
-        openai_api_key=api_key,
+        openai_api_key="dummy",  # Dummy value required by SDK
         default_headers={
             "Authorization": f"Api-Key {api_key}",
-            "Content-Type": "application/json"
         },
     )
 
