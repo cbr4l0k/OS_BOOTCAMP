@@ -4,19 +4,18 @@ Decomposition Node
 LangGraph node for breaking down complex queries into sub-tasks.
 This node analyzes the user's query and creates a list of
 sub-queries that can be addressed systematically.
-
-TO IMPLEMENT:
-1. Use the task decomposition adapter
-2. Analyze query complexity
-3. Create sub-tasks
-4. Update agent state with task list
 """
+
+import logging
+from typing import Callable, Optional
 
 from src.domain.models import AgentState
 from src.adapters.tasks.decomposer import Decomposer
 
+logger = logging.getLogger(__name__)
 
-def decomposition_node(state: AgentState) -> AgentState:
+
+def decomposition_node(state: AgentState, decomposer: Decomposer) -> AgentState:
     """
     LangGraph node for query decomposition.
 
@@ -28,59 +27,104 @@ def decomposition_node(state: AgentState) -> AgentState:
 
     Args:
         state: Current agent state
+        decomposer: Decomposer instance (injected via factory)
 
     Returns:
         Updated agent state with tasks
     """
-    # TODO: Implement decomposition node logic
-    #
-    # Steps:
-    # 1. Initialize decomposer
-    # 2. Decompose the query into sub-tasks
-    # 3. Update state with task list
-    # 4. Reset task index to 0
-    # 5. Return updated state
+    logger.info("Starting query decomposition...")
 
-    # Placeholder: just pass through
-    # return state
+    # Decompose the query into sub-tasks
+    logger.info(f"Main query: {state.query.content}")
+    sub_queries = decomposer.decompose(state.query)
 
-    # Example implementation:
-    # # Initialize decomposer
-    # decomposer = Decomposer(llm_client=None, max_subtasks=5)  # TODO: inject LLM
-    #
-    # # Decompose the query
-    # sub_queries = decomposer.decompose(state.query)
-    #
-    # # Update state with tasks
-    # return AgentState(
-    #     query=state.query,
-    #     conversation=state.conversation,
-    #     tasks=sub_queries,
-    #     current_task_index=0,  # Start at first task
-    #     retrieved=state.retrieved,
-    #     verified=state.verified,
-    #     answer=state.answer,
-    #     iteration=state.iteration,
-    #     memory={
-    #         **state.memory,
-    #         'decomposed': True,
-    #         'num_tasks': len(sub_queries)
-    #     }
-    # )
+    num_tasks = len(sub_queries)
+    was_decomposed = num_tasks > 1
 
-    return state
+    if was_decomposed:
+        logger.info(
+            f"Query decomposed into {num_tasks} sub-tasks:"
+        )
+        for i, task in enumerate(sub_queries, 1):
+            logger.info(f"  Task {i}: {task.content[:80]}...")
+    else:
+        logger.info("Query is simple, no decomposition needed")
+
+    # Update state using model_copy for immutability
+    return state.model_copy(
+        update={
+            'tasks': sub_queries,
+            'current_task_index': 0,  # Start at first task
+            'memory': {
+                **state.memory,
+                'decomposed': was_decomposed,
+                'num_tasks': num_tasks,
+                'decomposition_complete': True
+            }
+        }
+    )
 
 
-# HELPFUL RESOURCES:
-# - LangGraph conditional edges
-# - Query decomposition strategies
-# - Task planning in AI agents
-#
-# TIPS:
-# - This node typically runs after conversation
-# - May return just one task if query is simple
-# - Tasks can be processed sequentially or in parallel
-# - Store decomposition metadata in state.memory
-# - Consider adding task dependencies in memory
-# - For Simple Mode, this node might be skipped
-# - Log the decomposition for debugging
+def create_decomposition_node(
+    llm_client=None,
+    max_subtasks: int = 5,
+    min_query_length: int = 10,
+    use_llm: bool = True
+) -> Callable[[AgentState], AgentState]:
+    """
+    Factory function to create a configured decomposition node.
+
+    This allows us to inject the LLM client and configuration at graph build time.
+
+    Args:
+        llm_client: Optional LLM client for intelligent decomposition
+        max_subtasks: Maximum number of sub-tasks to create (default: 5)
+        min_query_length: Minimum words to consider for decomposition (default: 10)
+        use_llm: Whether to use LLM for decomposition (default: True)
+
+    Returns:
+        A configured decomposition node function ready to use in LangGraph
+
+    Example:
+        from langchain_openai import ChatOpenAI
+        from src.app.config import config
+
+        # Create LLM client
+        llm = ChatOpenAI(
+            api_key=config.openai_api_key,
+            base_url=config.openai_api_base,
+            model=config.model_name,
+            temperature=0.3
+        )
+
+        # Create node
+        node = create_decomposition_node(
+            llm_client=llm,
+            max_subtasks=5,
+            min_query_length=10,
+            use_llm=True
+        )
+
+        # Use in LangGraph
+        graph.add_node("decomposition", node)
+    """
+    # Create decomposer with configuration
+    decomposer = Decomposer(
+        llm_client=llm_client,
+        max_subtasks=max_subtasks,
+        min_query_length=min_query_length,
+        use_llm=use_llm
+    )
+
+    logger.info(
+        f"Created decomposition node "
+        f"(max_subtasks={max_subtasks}, "
+        f"min_query_length={min_query_length}, "
+        f"use_llm={use_llm})"
+    )
+
+    # Return a closure that captures the decomposer
+    def configured_node(state: AgentState) -> AgentState:
+        return decomposition_node(state, decomposer)
+
+    return configured_node

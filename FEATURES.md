@@ -1,20 +1,6 @@
 # TeraFinder - Feature Implementation Plan
 
 
----
-
-## 🧠 PHASE 2: Pro Mode Core (Intelligence Layer)
-**Goal**: Add verification and task decomposition for deep research
-
-- [x] **Verification engine** - Add cross-source fact checking with confidence scores - `feature/verification-engine`
-- [x] **Verification node** - Add validation graph node between retrieval and synthesis - `feature/verification-node`
-- [x] **Task decomposer** - Implement complex query breakdown into sub-tasks - `feature/task-decomposer`
-- [ ] **Decomposition node** - Add task breakdown graph node for Pro Mode - `feature/decomposition-node`
-
-**✅ Milestone**: System can break down complex queries and verify facts across sources
-
----
-
 ## 🔁 PHASE 3: Multi-Step Reasoning (Iteration)
 **Goal**: Enable iterative refinement and Pro Mode completion
 
@@ -85,3 +71,13 @@
 
 **✅ Milestone**: User can ask a question -> get a quick answer with citations (Simple Mode working)
 
+
+## 🧠 PHASE 2: Pro Mode Core (Intelligence Layer)
+**Goal**: Add verification and task decomposition for deep research
+
+- [x] **Verification engine** - Add cross-source fact checking with confidence scores - `feature/verification-engine`
+- [x] **Verification node** - Add validation graph node between retrieval and synthesis - `feature/verification-node`
+- [x] **Task decomposer** - Implement complex query breakdown into sub-tasks - `feature/task-decomposer`
+- [x] **Decomposition node** - Add task breakdown graph node for Pro Mode - `feature/decomposition-node`
+
+**✅ Milestone**: System can break down complex queries and verify facts across sources
