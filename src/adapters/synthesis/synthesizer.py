@@ -47,21 +47,6 @@ class Synthesizer(SynthesisPort):
         Returns:
             StructuredAnswer with reasoning and conclusion
         """
-        # TODO: Implement synthesis logic
-        #
-        # Steps:
-        # 1. Organize facts by topic or relevance
-        # 2. Create a reasoning chain (how we arrived at the answer)
-        # 3. Use LLM to generate coherent synthesis
-        # 4. Include source attributions
-        # 5. Provide a clear conclusion
-        # 6. Add metadata (confidence, sources used, etc.)
-
-        # Placeholder implementation:
-        reasoning = ""
-        conclusion = ""
-        metadata = {}
-
         if not data.facts:
             return StructuredAnswer(
                 reasoning="No verified facts available to synthesize.",
@@ -117,8 +102,6 @@ class Synthesizer(SynthesisPort):
                 conclusion=conclusion,
                 metadata=metadata
             )
-
-
 
 
 # HELPFUL RESOURCES:

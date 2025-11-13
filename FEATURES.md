@@ -1,6 +1,5 @@
 # TeraFinder - Feature Implementation Plan
 
--[ ] Answer synthesizer - Implement LLM-based answer generation from sources - `feature/answer-synthesizer`
 -[ ] Markdown formatter - Implement citation-rich markdown output - `feature/markdown-formatter`
 -[ ] Retrieval node - Implement graph node for data retrieval orchestration - `feature/retrieval-node`
 -[ ] Synthesis node - Implement graph node for answer generation - `feature/synthesis-node`
@@ -30,3 +29,4 @@
 # Done
 
 -[x] SERP adapter - Implement Google/Bing search API for basic web queries - `feature/serp-adapter`
+-[x] Answer synthesizer - Implement LLM-based answer generation from sources - `feature/answer-synthesizer`
