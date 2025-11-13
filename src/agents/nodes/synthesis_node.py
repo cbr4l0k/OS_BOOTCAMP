@@ -4,94 +4,120 @@ Synthesis Node
 LangGraph node for synthesizing verified data into answers.
 This node combines information from multiple sources into
 a coherent, well-reasoned response.
-
-TO IMPLEMENT:
-1. Take verified data from state
-2. Use the synthesis adapter
-3. Generate reasoning and conclusion
-4. Update state with structured answer
 """
 
-from src.domain.models import AgentState
+import logging
+from typing import Callable
+
+from src.domain.models import AgentState, VerifiedData
 from src.adapters.synthesis.synthesizer import Synthesizer
 
+logger = logging.getLogger(__name__)
 
-def synthesis_node(state: AgentState) -> AgentState:
+
+def synthesis_node(state: AgentState, synthesizer: Synthesizer) -> AgentState:
     """
     LangGraph node for answer synthesis.
 
     This node:
-    1. Takes verified data from state
+    1. Takes verified data from state (or retrieved data for Simple Mode)
     2. Synthesizes information into an answer
     3. Generates reasoning chain
     4. Updates state with structured answer
 
     Args:
         state: Current agent state
+        synthesizer: Synthesizer instance (injected via factory)
 
     Returns:
         Updated agent state with synthesized answer
     """
-    # TODO: Implement synthesis node logic
-    #
-    # Steps:
-    # 1. Check if we have verified data
-    # 2. Initialize synthesizer
-    # 3. Run synthesis
-    # 4. Update state with answer
-    # 5. Increment iteration counter
+    logger.info("Starting synthesis...")
 
-    # Placeholder: just pass through
-    # return state
+    # Check if we have verified data
+    if state.verified:
+        logger.info(f"Synthesizing from verified data (confidence: {state.verified.confidence:.2f})")
+        data_to_synthesize = state.verified
+    elif state.retrieved:
+        # Simple Mode: convert retrieved data to verified data
+        # This is a passthrough for MVP - real verification comes in Phase 2
+        logger.info("Simple Mode: converting retrieved data to verified data (passthrough)")
+        data_to_synthesize = VerifiedData(
+            facts={"retrieved": state.retrieved.sources},
+            confidence=0.7,  # Default confidence for unverified data
+            diversity_score=0.5,
+            corroboration={}
+        )
+    else:
+        # No data to synthesize
+        logger.warning("No data available for synthesis, skipping")
+        return state
 
-    # Example implementation:
-    # # Check if we have data to synthesize
-    # if not state.verified:
-    #     # No verified data, skip
-    #     return state
-    #
-    # # Initialize synthesizer
-    # synthesizer = Synthesizer(llm_client=None)  # TODO: inject LLM
-    #
-    # # Run synthesis
-    # answer = synthesizer.synthesize(state.verified)
-    #
-    # # Increment iteration (we completed one loop)
-    # new_iteration = state.iteration + 1
-    #
-    # # Update state
-    # return AgentState(
-    #     query=state.query,
-    #     conversation=state.conversation,
-    #     tasks=state.tasks,
-    #     current_task_index=state.current_task_index,
-    #     retrieved=state.retrieved,
-    #     verified=state.verified,
-    #     answer=answer,
-    #     iteration=new_iteration,
-    #     memory={
-    #         **state.memory,
-    #         'synthesis_complete': True,
-    #         'answer_length': len(answer.conclusion),
-    #         'reasoning_steps': len(answer.reasoning.split('\n'))
-    #     }
-    # )
+    # Run synthesis
+    logger.info(f"Synthesizing answer from {len(data_to_synthesize.facts)} fact groups...")
+    answer = synthesizer.synthesize(data_to_synthesize)
 
-    return state
+    # Increment iteration (we completed one loop)
+    new_iteration = state.iteration + 1
+
+    logger.info(
+        f"Synthesis complete. Answer length: {len(answer.conclusion)} chars, "
+        f"Confidence: {answer.metadata.get('confidence', 'N/A')}"
+    )
+
+    # Update state using model_copy for immutability
+    return state.model_copy(
+        update={
+            'answer': answer,
+            'iteration': new_iteration,
+            'memory': {
+                **state.memory,
+                'synthesis_complete': True,
+                'answer_length': len(answer.conclusion),
+                'reasoning_steps': len(answer.reasoning.split('\n')) if answer.reasoning else 0,
+                'synthesis_confidence': answer.metadata.get('confidence', 0.0)
+            }
+        }
+    )
 
 
-# HELPFUL RESOURCES:
-# - Multi-document summarization
-# - LangChain output parsers
-# - Reasoning chain generation
-#
-# TIPS:
-# - This node produces the final answer
-# - Quality depends heavily on LLM and prompt
-# - Include citations in the answer
-# - Maintain source attribution
-# - Generate both reasoning and conclusion
-# - This is a good place to format the answer
-# - May combine answers from multiple sub-tasks
-# - Store intermediate synthesis results in memory
-# - Consider different synthesis strategies for different domains
+def create_synthesis_node(llm_client) -> Callable[[AgentState], AgentState]:
+    """
+    Factory function to create a configured synthesis node.
+
+    This allows us to inject the LLM client at graph build time.
+
+    Args:
+        llm_client: LLM client for generating answers (e.g., ChatOpenAI)
+
+    Returns:
+        A configured synthesis node function ready to use in LangGraph
+
+    Example:
+        from langchain_openai import ChatOpenAI
+        from src.app.config import config
+
+        # Create LLM client
+        llm = ChatOpenAI(
+            api_key=config.openai_api_key,
+            base_url=config.openai_api_base,
+            model=config.model_name,
+            temperature=0.3
+        )
+
+        # Create node
+        node = create_synthesis_node(llm_client=llm)
+
+        # Use in LangGraph
+        graph.add_node("synthesis", node)
+    """
+    # Create synthesizer with LLM client
+    synthesizer = Synthesizer(llm_client=llm_client)
+
+    logger.info("Created synthesis node with configured LLM client")
+
+    # Return a closure that captures the synthesizer
+    def configured_node(state: AgentState) -> AgentState:
+        return synthesis_node(state, synthesizer)
+
+    return configured_node
