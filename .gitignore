@@ -74,3 +74,5 @@ data/
 # Personal
 notes.md
 uv.lock
+.chainlit/
+chainlit.md

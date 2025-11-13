@@ -25,9 +25,15 @@ async def on_chat_start():
 
     model = ChatOpenAI(
         streaming=True,
-        openai_api_key=api_key,
+        model_name="MiniMaxAI/MiniMax-M2",
         openai_api_base=base_url,
-        model_name="MiniMaxAI/MiniMax-M2"
+        openai_api_key=api_key,
+        client_args={
+            "default_headers": {
+                "Authorization": f"Api-Key {api_key}",
+                "Content-Type": "application/json"
+            }
+        },
     )
 
     prompt = ChatPromptTemplate.from_messages(
