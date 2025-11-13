@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
+terafinder='src.app.main:main'
 dev='scripts.dev:dev'
 
 [build-system]

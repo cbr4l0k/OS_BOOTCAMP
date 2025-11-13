@@ -7,7 +7,7 @@ def dev():
     """Run Chainlit in development mode with watch flag."""
     try:
         subprocess.run(
-            ["chainlit", "run", "src/app/main.py", "-w"],
+            ["chainlit", "run", "src/app/app.py", "-w"],
             check=True
         )
     except KeyboardInterrupt:

@@ -1,6 +1,5 @@
 # TeraFinder - Feature Implementation Plan
 
--[ ] SERP adapter - Implement Google/Bing search API for basic web queries - `feature/serp-adapter`
 -[ ] Answer synthesizer - Implement LLM-based answer generation from sources - `feature/answer-synthesizer`
 -[ ] Markdown formatter - Implement citation-rich markdown output - `feature/markdown-formatter`
 -[ ] Retrieval node - Implement graph node for data retrieval orchestration - `feature/retrieval-node`
@@ -27,3 +26,7 @@
 -[ ] Mode comparison UI - Add side-by-side Simple vs Pro Mode view - `feature/mode-comparison`
 -[ ] SimpleQA benchmark - Add accuracy testing for simple questions - `feature/simpleqa-bench`
 -[ ] FRAMES benchmark - Add factuality and reasoning depth evaluation - `feature/frames-bench`
+
+# Done
+
+-[x] SERP adapter - Implement Google/Bing search API for basic web queries - `feature/serp-adapter`
