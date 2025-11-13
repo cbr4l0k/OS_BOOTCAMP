@@ -67,6 +67,11 @@ class RetrievedData(BaseModel):
 class VerifiedData(BaseModel):
     facts: dict[str, Any] = Field(..., description="Valid factual content.")
     confidence: float = Field(..., gt=0, lt=1, description="Confidence score between 0 and 1.")
+    diversity_score: float = Field(default=0.0, ge=0, le=1, description="Source diversity score (0-1).")
+    corroboration: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Map of facts to source IDs that corroborate them."
+    )
 
     def to_formatted_string(self) -> str:
         """
