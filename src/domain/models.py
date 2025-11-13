@@ -129,7 +129,7 @@ class AgentState(BaseModel):
     )
     current_task_index: int = Field(
         default=0,
-        gt= 0,
+        ge=0,
         description="Pointer to current task in Pro Mode."
     )
 

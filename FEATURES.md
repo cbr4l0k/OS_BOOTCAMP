@@ -1,8 +1,7 @@
 # TeraFinder - Feature Implementation Plan
 
--[ ] Retrieval node - Implement graph node for data retrieval orchestration - `feature/retrieval-node`
 -[ ] Synthesis node - Implement graph node for answer generation - `feature/synthesis-node`
--[ ] Graph definition - Wire up basic LangGraph workflow (retrieval→synthesis→format) - `feature/graph-definition`
+-[ ] Graph definition - Wire up basic LangGraph workflow (retrieval->synthesis->format) - `feature/graph-definition`
 -[ ] UI integration - Connect agent graph to Chainlit replacing historian bot - `feature/ui-integration`
 -[ ] Verification engine - Add cross-source fact checking with confidence scores - `feature/verification-engine`
 -[ ] Verification node - Add validation graph node between retrieval and synthesis - `feature/verification-node`
@@ -30,3 +29,4 @@
 -[x] SERP adapter - Implement Google/Bing search API for basic web queries - `feature/serp-adapter`
 -[x] Answer synthesizer - Implement LLM-based answer generation from sources - `feature/answer-synthesizer`
 -[x] Markdown formatter - Implement citation-rich markdown output - `feature/markdown-formatter`
+-[x] Retrieval node - Implement graph node for data retrieval orchestration - `feature/retrieval-node`
